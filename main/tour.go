@@ -5,6 +5,8 @@ import (
 	"math"
 	"math/cmplx"
 	"math/rand"
+	"runtime"
+	"time"
 )
 
 // variable declarations may be "factored" into blocks,
@@ -99,6 +101,35 @@ func main() {
 	fmt.Println("needInt(Small):", needInt(Small))
 	fmt.Println("needFloat(Small):", needFloat(Small))
 	fmt.Println("needFloat(Big):", needFloat(Big))
+
+	// Only looping construct, the for loop (see git push -u -f origin master)
+	fmt.Println("sum10Times(12):", sum10Times(12))
+
+	//  In the loop init and post statements are optional.
+	fmt.Println("sumWithLoop(400):", sumWithLoop(400))
+
+	// Using if (see method)
+	fmt.Println("sqrt(2):", sqrt(2), "sqrt(-4):", sqrt(-4))
+
+	// Using if with condition (see method)
+	// Using else (see method)
+	fmt.Println("pow(3, 2, 10):", pow(3, 2, 10),
+		"pow(3, 3, 20):", pow(3, 3, 20))
+
+	fmt.Println("sqrtFinder(81):", sqrtFinder(81))
+
+	// Switch case (see method)
+	fmt.Println("getOS():", getOS())
+
+	// Switch case with evaluate case
+	fmt.Println("When's Saturday?", FindSaturday())
+	fmt.Println(greetings())
+
+	// A defer statement defers the execution of a function
+	// until the surrounding function returns.
+	defer fmt.Println("LAST MESSAGE")
+
+	countingUsingDefer()
 }
 
 func add(x int, y int) int {
@@ -122,4 +153,111 @@ func split(sum int) (x, y int) {
 func needInt(x int) int { return x*10 + 1 }
 func needFloat(x float64) float64 {
 	return x * 0.1
+}
+
+func sum10Times(x int) (sum int) {
+	for i := 0; i < 10; i++ {
+		sum += x
+	}
+	return sum
+}
+
+func sumWithLoop(x int) (sum int) {
+	sum = x
+	// In Go while = for with init and post statements
+	for sum < 1000 {
+		sum += sum
+	}
+	return
+}
+
+func sqrt(x float64) string {
+	if x < 0 {
+		return sqrt(-x) + "i"
+	}
+	return fmt.Sprint(math.Sqrt(x))
+}
+
+func pow(x, n, lim float64) float64 {
+	//  Like for, the if statement can start with a short
+	// statement to execute before the condition.
+	// ---
+	// Variables declared by the statement are only in scope
+	// until the end of the if.
+	if v := math.Pow(x, n); v < lim {
+		return v
+	} else {
+		// Variables declared inside an if short statement
+		// are also available inside any of the else blocks.
+		fmt.Println("%g >= %g\n", v, lim)
+	}
+	// can't use v here, though
+	return lim
+}
+
+// Loop and if
+func sqrtFinder(x float64) float64 {
+	z := float64(1)
+	previous := z
+	for i := 0; i < 10; i++ {
+		z -= (z*z - x) / (2 * z)
+		fmt.Println("i=", i, "|--> z=", z)
+		if math.Abs(z-previous) < 0.001 {
+			return z
+		}
+		previous = z
+	}
+	return z
+}
+
+// Switch case
+func getOS() string {
+	switch os := runtime.GOOS; os {
+	case "darwin":
+		return "OS X."
+	case "linux":
+		return "Linux."
+	default:
+		// freebsd, openbsd,
+		// plan9, windows...
+		return os
+	}
+}
+
+func FindSaturday() string {
+	today := time.Now().Weekday()
+	switch time.Saturday {
+	case today + 0:
+		return "Today."
+	case today + 1:
+		return "Tomorrow."
+	case today + 2:
+		return "In two days."
+	default:
+		return "Too far away."
+	}
+}
+
+func greetings() string {
+	t := time.Now()
+	// Switch without a condition is the same as switch true.
+	// This construct can be a clean way to write long
+	// if-then-else chains.
+	switch {
+	case t.Hour() < 12:
+		return "Good morning!"
+	case t.Hour() < 17:
+		return "Good afternoon."
+	default:
+		return "Good evening."
+	}
+}
+
+func countingUsingDefer() {
+	fmt.Println("countingUsingDefer start")
+	for i := 0; i < 10; i++ {
+		// bad practice, can cause issues
+		defer fmt.Println("countingUsingDefer:", i)
+	}
+	fmt.Println("countingUsingDefer done")
 }
