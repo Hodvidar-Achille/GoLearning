@@ -1,5 +1,8 @@
 package main
 
+// Pointers, Structs, Slices and Maps
+// Functions as variables
+
 import (
 	"fmt"
 	"math"

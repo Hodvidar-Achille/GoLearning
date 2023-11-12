@@ -1,5 +1,8 @@
 package main
 
+// Packages, variables and functions
+// for, if, else, switch and defer
+
 import (
 	"fmt"
 	"math"
