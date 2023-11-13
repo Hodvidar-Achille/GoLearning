@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"image"
+	"image/color"
 	"io"
 	"math"
+	"os"
 	"strings"
 	"time"
 )
@@ -138,18 +141,35 @@ func main() {
 	fmt.Printf("Sqrt(-2): %v | %v\n", r, e)
 
 	// Readers
-	myReader := strings.NewReader("Hello, Reader!")
+	newReader := strings.NewReader("Hello, Reader!")
 	b := make([]byte, 8)
-	for {
-		n, err := myReader.Read(b)
-		fmt.Printf("n = %v err = %v b = %v\n", n, err, b)
-		fmt.Printf("b[:n] = %q\n", b[:n])
-		if err == io.EOF {
-			break
-		}
-	}
+	displayReader(newReader, b)
 
-	// TODO
+	myReader := &MyReader{}
+	b = make([]byte, 10)
+	displayReader2(myReader, b)
+
+	myOtherReader := &rot13Reader{r: strings.NewReader("Lbh penpxrq gur pbqr!")}
+	b = make([]byte, 20)
+	displayReader(io.Reader(myOtherReader), b)
+
+	s := strings.NewReader("Lbh penpxrq gur pbqr!")
+	r2 := rot13Reader{s}
+	io.Copy(os.Stdout, &r2)
+	fmt.Println("")
+
+	// Images
+	m := image.NewRGBA(image.Rect(0, 0, 100, 100))
+	fmt.Println(m.Bounds())
+	fmt.Println(m.At(0, 0).RGBA())
+
+	m2 := Image{Width: 100, Height: 100} // Set the width and height
+	// pic.ShowImage(m2) /* from "golang.org/x/tour/pic" */
+	fmt.Println("m2 := Image{Width: 100, Height: 100}")
+	fmt.Println("m2:", m2)
+	fmt.Println("m2.Bounds()", m2.Bounds())
+	fmt.Println("m2.ColorModel():", m2.ColorModel())
+	fmt.Println("m2.At(10, 10):", m2.At(10, 10))
 }
 
 type Vertex3 struct {
@@ -303,15 +323,76 @@ func Sqrt(x float64) (float64, error) {
 	}
 }
 
+func displayReader(reader io.Reader, b []byte) {
+	for {
+		n, err := reader.Read(b)
+		fmt.Printf("n = %v err = %v b = %v\n", n, err, b)
+		fmt.Printf("b[:n] = %q\n", b[:n])
+		if err == io.EOF {
+			break
+		}
+	}
+}
+
 type MyReader struct{}
 
 func (m MyReader) Read(b []byte) (i int, e error) {
-	for x := range b {
-		b[x] = 'A'
+	for i := range b {
+		b[i] = 'A'
 	}
 	return len(b), nil
 }
 
+func displayReader2(myReader *MyReader, b []byte) {
+	n, err := myReader.Read(b)
+	fmt.Printf("n = %v err = %v b = %v\n", n, err, b)
+	fmt.Printf("b[:n] = %q\n", b[:n])
+}
+
 type rot13Reader struct {
 	r io.Reader
+}
+
+func (rot13Reader *rot13Reader) Read(b []byte) (n int, err error) {
+	n, err = rot13Reader.r.Read(b)
+	for i := 0; i < n; i++ {
+		b[i] = rot13(b[i])
+	}
+	return n, err
+}
+
+func rot13(b byte) byte {
+	switch {
+	case 'a' <= b && b <= 'z':
+		return 'a' + (b-'a'+13)%26
+	case 'A' <= b && b <= 'Z':
+		return 'A' + (b-'A'+13)%26
+	}
+	return b
+}
+
+/*
+The image interface:
+
+	type Image interface {
+	    ColorModel() color.Model
+	    Bounds() Rectangle
+	    At(x, y int) color.Color
+	}
+*/
+type Image struct {
+	Width, Height int
+}
+
+func (img Image) Bounds() image.Rectangle {
+	return image.Rect(0, 0, img.Width, img.Height)
+}
+
+func (img Image) ColorModel() color.Model {
+	return color.RGBAModel
+}
+
+func (img Image) At(x, y int) color.Color {
+	v := uint8((x + y) / 2)
+	return color.RGBA{v, v, 255, 255}
 }
