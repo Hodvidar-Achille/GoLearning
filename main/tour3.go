@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"golang.org/x/tour/pic"
 	"image"
 	"image/color"
 	"io"
@@ -164,12 +165,12 @@ func main() {
 	fmt.Println(m.At(0, 0).RGBA())
 
 	m2 := Image{Width: 100, Height: 100} // Set the width and height
-	// pic.ShowImage(m2) /* from "golang.org/x/tour/pic" */
 	fmt.Println("m2 := Image{Width: 100, Height: 100}")
 	fmt.Println("m2:", m2)
 	fmt.Println("m2.Bounds()", m2.Bounds())
 	fmt.Println("m2.ColorModel():", m2.ColorModel())
 	fmt.Println("m2.At(10, 10):", m2.At(10, 10))
+	pic.ShowImage(m2) /* from "golang.org/x/tour/pic" */
 }
 
 type Vertex3 struct {

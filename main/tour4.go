@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"golang.org/x/tour/tree"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -77,9 +80,42 @@ func main() {
 
 	// Default Selection (see fibonacci5)
 
-	// TODO
 	// Exercise: Equivalent Binary Trees
+	// using "golang.org/x/tour/tree"
 
+	// test
+	root := &tree.Tree{
+		Value: 1,
+		Left: &tree.Tree{
+			Value: 0,
+		},
+		Right: &tree.Tree{
+			Value: 2,
+			Right: &tree.Tree{
+				Value: 3,
+			},
+		},
+	}
+	printTreeComplexImproved(root)
+
+	tree1 := tree.New(5)
+	tree2 := tree.New(5)
+	fmt.Println("printTreeComplexImproved(tree1)")
+	printTreeComplexImproved(tree1)
+	fmt.Println("printTreeComplexImproved(tree2)")
+	printTreeComplexImproved(tree2)
+	fmt.Println("Same(tree1, tree2):", Same(tree1, tree2))
+	defer testLast()
+}
+
+func testLast() {
+	tree1 := tree.New(5)
+	tree2 := tree.New(10)
+	fmt.Println("printTreeComplexImproved(tree1)")
+	printTreeComplexImproved(tree1)
+	fmt.Println("printTreeComplexImproved(tree2)")
+	printTreeComplexImproved(tree2)
+	fmt.Println("Same(tree1, tree2):", Same(tree1, tree2))
 }
 
 func say(s string) {
@@ -128,5 +164,135 @@ func fibonacci5(c, quit chan int) {
 			fmt.Println("Waiting...")
 			time.Sleep(250 * time.Millisecond)
 		}
+	}
+}
+
+/*
+type Tree struct {
+	Left  *Tree
+	Value int
+	Right *Tree
+}
+*/
+
+// Walk walks the tree t sending all values
+// from the tree to the channel ch.
+func Walk(t *tree.Tree, ch chan int) {
+	fmt.Println("Walk in a tree")
+	if t.Left != nil {
+		fmt.Println("going left")
+		Walk(t.Left, ch)
+	} else {
+		fmt.Println("take value")
+		ch <- t.Value
+	}
+	if t.Right != nil {
+		fmt.Println("going right")
+		Walk(t.Right, ch)
+	}
+}
+
+// Same determines whether the trees
+// t1 and t2 contain the same values.
+func Same(t1, t2 *tree.Tree) bool {
+	fmt.Println("Same() method start")
+	c1 := make(chan int)
+	c2 := make(chan int)
+	go Walk(t1, c1)
+	go Walk(t2, c2)
+	for {
+		select {
+		case x := <-c1:
+			y := <-c2
+			fmt.Printf("x := <-c1 (x=%v) y := <-c2 (y=%v)\n", x, y)
+			if x != y {
+				return false
+			}
+		case <-c1:
+			fmt.Println("<-c1 Same() method end")
+			return true
+		}
+	}
+}
+
+func printTree(t *tree.Tree) {
+	if t == nil {
+		return
+	}
+
+	printTree(t.Left)    // Traverse left subtree
+	fmt.Println(t.Value) // Print the value
+	printTree(t.Right)   // Traverse right subtree
+}
+
+type NodeInfo struct {
+	Node   *tree.Tree
+	Parent int
+}
+
+func printTreeComplex(root *tree.Tree) {
+	if root == nil {
+		return
+	}
+
+	var nodes []*tree.Tree
+	nodes = append(nodes, root)
+
+	for len(nodes) > 0 {
+		size := len(nodes)
+		currentLevel := []string{}
+
+		for i := 0; i < size; i++ {
+			node := nodes[0]
+			nodes = nodes[1:]
+
+			if node != nil {
+				currentLevel = append(currentLevel, strconv.Itoa(node.Value))
+				nodes = append(nodes, node.Left)
+				nodes = append(nodes, node.Right)
+			} else {
+				currentLevel = append(currentLevel, "nil")
+			}
+		}
+
+		fmt.Println(strings.Join(currentLevel, " - "))
+	}
+}
+
+func printTreeComplexImproved(root *tree.Tree) {
+	if root == nil {
+		return
+	}
+
+	nodes := []NodeInfo{{Node: root, Parent: -1}} // -1 indicates no parent
+
+	for len(nodes) > 0 {
+		size := len(nodes)
+		currentLevel := []string{}
+
+		for i := 0; i < size; i++ {
+			nodeInfo := nodes[0]
+			nodes = nodes[1:]
+
+			var nodeStr string
+			if nodeInfo.Node != nil {
+				nodeStr = strconv.Itoa(nodeInfo.Node.Value)
+				if nodeInfo.Parent != -1 {
+					nodeStr = fmt.Sprintf("(%d) %s", nodeInfo.Parent, nodeStr)
+				}
+
+				nodes = append(nodes, NodeInfo{Node: nodeInfo.Node.Left, Parent: nodeInfo.Node.Value})
+				nodes = append(nodes, NodeInfo{Node: nodeInfo.Node.Right, Parent: nodeInfo.Node.Value})
+			} else {
+				if nodeInfo.Parent != -1 {
+					nodeStr = fmt.Sprintf("(%d) nil", nodeInfo.Parent)
+				} else {
+					nodeStr = "nil"
+				}
+			}
+			currentLevel = append(currentLevel, nodeStr)
+		}
+
+		fmt.Println(strings.Join(currentLevel, " - "))
 	}
 }
